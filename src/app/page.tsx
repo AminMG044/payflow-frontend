@@ -91,7 +91,7 @@ export default function HomePage() {
         <Stat
           label={tr("Charges settled")}
           value={loaded ? (stats?.charges ?? "—") : "…"}
-          hint={stats ?tr("ledger {0}", { "0": stats.lastIndexedLedger }) :tr("needs indexer")}
+          hint={stats ?tr("ledger {0}", { "0": String(stats.lastIndexedLedger) }) :tr("needs indexer")}
         />
       </section>
 

@@ -29,7 +29,7 @@
         },
         {
           "name": "Locale regressions",
-          "run": "npm test -- test/i18n.test.ts test/i18n-provider.test.tsx"
+          "run": "npm test -- test/i18n.test.ts test/i18n-provider.test.tsx test/i18n-pages.test.tsx"
         },
         {
           "name": "Lint",
@@ -47,9 +47,14 @@
           "run": "npm test"
         },
         {
+          "name": "Install browser validator",
+          "if": "always()",
+          "run": "npm install --prefix /tmp/i18n-browser --no-save --no-package-lock --ignore-scripts playwright@1.58.2\nnode /tmp/i18n-browser/node_modules/playwright/cli.js install --with-deps chromium"
+        },
+        {
           "name": "Static production build (contract-only mode)",
           "if": "always()",
-          "run": "npm run build",
+          "run": "npm run build\nmkdir -p .review/site-chain/payflow-frontend\ncp -R out/. .review/site-chain/payflow-frontend/",
           "env": {
             "NEXT_PUBLIC_API_URL": "",
             "NEXT_PUBLIC_SOROBAN_RPC_URL": "https://soroban-testnet.stellar.org",
@@ -62,9 +67,14 @@
           }
         },
         {
+          "name": "Browser review (chain)",
+          "if": "always()",
+          "run": "node .review/capture-i18n.mjs chain"
+        },
+        {
           "name": "Static production build with backend configured",
           "if": "always()",
-          "run": "npm run build",
+          "run": "npm run build\nmkdir -p .review/site-api/payflow-frontend\ncp -R out/. .review/site-api/payflow-frontend/",
           "env": {
             "NEXT_PUBLIC_API_URL": "http://localhost:8080",
             "NEXT_PUBLIC_SOROBAN_RPC_URL": "https://soroban-testnet.stellar.org",
@@ -74,6 +84,20 @@
             "NEXT_PUBLIC_SUBSCRIPTION_ID": "CD5YZUJU6WLFIHGAV4J2BV42GCVZE5ZGDUGSW5CBRIA47TQHSZZW3XMM",
             "NEXT_PUBLIC_TOKEN_ID": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
             "NEXT_PUBLIC_BASE_PATH": "/payflow-frontend"
+          }
+        },
+        {
+          "name": "Browser review (api)",
+          "if": "always()",
+          "run": "node .review/capture-i18n.mjs api"
+        },
+        {
+          "name": "Upload responsive locale evidence",
+          "if": "always()",
+          "uses": "actions/upload-artifact@v4",
+          "with": {
+            "name": "i18n-24-browser-evidence",
+            "path": ".review/screenshots/"
           }
         }
       ]

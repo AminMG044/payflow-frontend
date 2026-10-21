@@ -219,7 +219,7 @@ function ReceiptContent() {
                   ?tr("Charge {0} of {1}", { "0": receipt.chargeNumber, "1": receipt.totalCharges })
                   :tr("Charge #{0}", { "0": receipt.chargeNumber })
                 :tr("Recurring charge")}
-              {receipt.ledger ?tr(" · Ledger #{0}", { "0": receipt.ledger }) : ""}
+              {receipt.ledger ?tr(" · Ledger #{0}", { "0": String(receipt.ledger) }) : ""}
             </div>
           </div>
         </section>

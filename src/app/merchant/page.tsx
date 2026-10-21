@@ -1847,7 +1847,7 @@ export default function MerchantPage() {
                       </div>
                       <p className="text-muted">{tr("Add this snippet to any HTML website. Subscribers can click it to subscribe in a secure popup window.")}</p>
                       <pre className="overflow-x-auto rounded border border-edge bg-background p-2 font-mono text-[11px] text-muted">
-                        <code>{tr("<script src=\"{0}/payflow-frontend/embed/payflow-embed.js\" defer></script>\n<payflow-button\n  plan-id=\"{1}\"\n  merchant=\"{2}\"\n  name=\"{3}\"\n  amount=\"{4} {5}\"\n  period=\"{6}\">\n</payflow-button>", { "0": typeof window !== "undefined" ? window.location.origin : "", "1": p.id, "2": address, "3": p.name ||tr("Plan #{0}", { "0": p.id }), "4": fromStroops(p.amount, 4, meta.decimals), "5": meta.symbol, "6": formatPeriod(p.period) })}</code>
+                        <code>{`<script src="${typeof window !== "undefined" ? window.location.origin : ""}/payflow-frontend/embed/payflow-embed.js" defer></script>\n<payflow-button\n  plan-id="${p.id}"\n  merchant="${address}"\n  name="${p.name || `Plan #${p.id}`}"\n  amount="${fromStroops(p.amount, 4, meta.decimals)} ${meta.symbol}"\n  period="${formatPeriod(p.period)}">\n</payflow-button>`}</code>
                       </pre>
                       <CopyButton
                         value={`<script src="${typeof window !== "undefined" ? window.location.origin : ""}/payflow-frontend/embed/payflow-embed.js" defer></script>\n<payflow-button plan-id="${p.id}" merchant="${address}" name="${p.name || `Plan #${p.id}`}" amount="${fromStroops(p.amount, 4, meta.decimals)} ${meta.symbol}" period="${formatPeriod(p.period)}"></payflow-button>`}

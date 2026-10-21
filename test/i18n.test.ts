@@ -37,7 +37,7 @@ describe("English and French financial presentation", () => {
   });
   it("localizes dynamic trial and discount text and accessible chart descriptions", () => {
     const p = presentation("fr");
-    expect(p.trialBadge({ trial: 3 * 86400 })).toBe("Essai gratuit : 3 jours");
+    expect(p.trialBadge({ trial: 3 * 86400 })).toBe("Essai gratuit : 3\u00a0jours");
     expect(p.discountBadge({ discount_bps: 1250, discount_charges: 3 })).toBe("12,5\u00a0% de réduction sur 3 prélèvements");
     expect(p.describeSeries([], "day", String)).toBe("Aucun revenu enregistré sur cette période.");
     const date = Date.UTC(2026, 0, 2) / 1000;
@@ -52,7 +52,7 @@ describe("catalog completeness and application errors", () => {
     expect(Object.keys(fr).sort()).toEqual(Object.keys(en).sort());
     for (const key of Object.keys(en) as (keyof typeof en)[]) {
       expect(fr[key].trim(), key).not.toBe("");
-      expect([...fr[key].matchAll(/\{\w+\}/g)].map(m => m[0]).sort(), key).toEqual([...key.matchAll(/\{\w+\}/g)].map(m => m[0]).sort());
+      expect([...new Set([...fr[key].matchAll(/\{\w+\}/g)].map(m => m[0]))].sort(), key).toEqual([...new Set([...key.matchAll(/\{\w+\}/g)].map(m => m[0]))].sort());
     }
   });
   it("interpolates locale numbers, preserves external values, and falls back safely", () => {

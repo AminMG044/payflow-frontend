@@ -68,9 +68,9 @@ export function CopyButton({ value, label }: { value: string; label: string }) {
 
   const announcement =
     state === "copied"
-      ? `${label} copied to clipboard`
+      ? tr("{0} copied to clipboard", { 0: label })
       : state === "error"
-        ? `Could not copy the ${label}`
+        ? tr("Could not copy the {0}", { 0: label })
         : "";
 
   return (

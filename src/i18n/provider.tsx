@@ -38,7 +38,10 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
-  useEffect(() => { document.documentElement.lang = locale; }, [locale]);
+  useEffect(() => {
+    document.documentElement.lang = locale;
+    document.title = createTranslation(locale)("Payflow — recurring payments on Stellar");
+  }, [locale]);
   const value = useMemo(() => makeValue(locale, next => {
     if (!isLocale(next)) return;
     setLocaleState(next);

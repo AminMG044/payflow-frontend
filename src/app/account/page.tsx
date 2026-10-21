@@ -1050,7 +1050,7 @@ function AccountInner() {
                 <div
                   key={event.tx_hash}
                   className="flex items-center justify-between gap-3 rounded-lg border border-edge p-3"
-                  aria-label={tr("{0} {1} {2}, ledger {3}", { "0": label, "1": eventAmount, "2": vaultMeta.symbol, "3": event.ledger })}
+                  aria-label={tr("{0} {1} {2}, ledger {3}", { "0": label, "1": eventAmount, "2": vaultMeta.symbol, "3": String(event.ledger) })}
                 >
                   <div className="flex items-center gap-3 text-sm">
                     <span className="font-medium">{typeof label === "string" ? tr(label) : label}</span>

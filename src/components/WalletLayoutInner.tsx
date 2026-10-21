@@ -139,7 +139,7 @@ export function WalletLayoutInner({ children }: { children: React.ReactNode }) {
           className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-2 focus:rounded-lg focus:bg-panel focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-fg focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-accent"
         >{tr("Skip to content")}</a>
         <header className="border-b border-edge py-4 sm:py-5 print:hidden">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-6">
               <Link href="/" className="shrink-0 text-lg font-semibold tracking-tight">{tr("Pay")}<span className="text-accent">{tr("flow")}</span>
               </Link>

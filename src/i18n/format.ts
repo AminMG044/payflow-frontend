@@ -17,7 +17,7 @@ export function formatDate(seconds: number, locale: Locale): string {
 }
 export function formatExactTime(seconds: number, locale: Locale): string {
   if (!seconds) return "—";
-  return new Intl.DateTimeFormat(localeTag(locale), { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }).format(new Date(seconds * 1000));
+  return new Intl.DateTimeFormat(localeTag(locale), { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }).format(new Date(seconds * 1000)) + " UTC";
 }
 export function formatWhen(seconds: number, locale: Locale, now = Date.now()): string {
   if (!seconds) return "—";
