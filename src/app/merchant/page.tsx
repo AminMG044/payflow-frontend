@@ -38,7 +38,7 @@ import {
   remainingDiscountCharges,
   supportsDiscounts,
 } from "@/lib/discount";
-import { MAX_NAME_LEN, mandatePauseUntil, mandateRefundableAmount, mandateSupportsRefund, nameByteLength, payflow, server } from "@/lib/payflow";
+import { MAX_NAME_LEN, MAX_PAGE, mandatePauseUntil, mandateRefundableAmount, mandateSupportsRefund, nameByteLength, payflow, server } from "@/lib/payflow";
 import { useWallet } from "@/lib/wallet";
 import { useStream } from "@/lib/stream";
 import {
@@ -68,7 +68,7 @@ import { countOpenMandates } from "@/lib/plans";
 import { formatUsdEstimate, formatUsdcEstimate, useXlmUsdPrice } from "@/lib/price";
 import { AmountInput } from "@/components/AmountInput";
 import { CopyButton } from "@/components/CopyButton";
-import { AddressLink, Badge, Empty, Notice, Panel, SkeletonRows, Stat, TimeAgo, TxLink } from "@/components/ui";
+import { AddressLink, Badge, Dialog, Empty, Notice, Panel, SkeletonRows, Stat, TimeAgo, TxLink } from "@/components/ui";
 
 /** How far back the revenue chart looks, in days. */
 const REVENUE_WINDOW_DAYS = 90;
@@ -783,6 +783,11 @@ export default function MerchantPage() {
   const [confirmPause, setConfirmPause] = useState<number | null>(null);
   // Deactivating a plan asks for confirmation and displays open mandate impact.
   const [confirmDeactivate, setConfirmDeactivate] = useState<number | null>(null);
+  // Bulk deactivation of all active plans: confirmation dialog with progress.
+  const [confirmDeactivateAll, setConfirmDeactivateAll] = useState(false);
+  const [deactivateAllProgress, setDeactivateAllProgress] = useState<{ current: number; total: number } | null>(null);
+  // Set once the bulk run finishes; cleared when the merchant starts another.
+  const [deactivateAllDone, setDeactivateAllDone] = useState(false);
   // Embed snippet code view for plan.
   const [embedFor, setEmbedFor] = useState<number | null>(null);
   const { priceData: xlmPrice } = useXlmUsdPrice();
@@ -1250,6 +1255,63 @@ export default function MerchantPage() {
     }
   }
 
+  /** Count active plans and their open mandates for the bulk deactivation confirmation. */
+  function getDeactivationImpact(): { activePlans: number; openMandates: number } {
+    if (!plans) return { activePlans: 0, openMandates: 0 };
+    let activePlans = 0;
+    let openMandates = 0;
+    for (const p of plans) {
+      if (p.active) {
+        activePlans += 1;
+        const stats = planStats[p.id];
+        openMandates += countOpenMandates(p.id, mandates, stats?.subscriber_count);
+      }
+    }
+    return { activePlans, openMandates };
+  }
+
+  /** Deactivate all active plans by paging through with deactivate_page. */
+  async function deactivateAllPlans() {
+    if (!address || !signXdr) return;
+    const { activePlans } = getDeactivationImpact();
+    if (activePlans === 0) return;
+
+    // Get total plan count to determine how many pages to process.
+    // The contract's deactivate_page works on the full plan index (active + inactive),
+    // so we page through all plans. The contract handles idempotency for already-inactive plans.
+    let totalPlanCount: number;
+    try {
+      totalPlanCount = await payflow.merchantPlanCount(address, address);
+    } catch {
+      // If we can't read the count, fall back to the plans we have loaded.
+      totalPlanCount = plans?.length ?? 0;
+    }
+    const totalPages = Math.max(1, Math.ceil(totalPlanCount / MAX_PAGE));
+    let completedPages = 0;
+
+    setDeactivateAllProgress({ current: 0, total: totalPages });
+    setDeactivateAllDone(false);
+    setError(null);
+
+    try {
+      // Page through from the oldest (start=0) to newest, MAX_PAGE at a time.
+      // The contract's deactivate_page deactivates plans in the given page.
+      for (let start = 0; start < totalPlanCount; start += MAX_PAGE) {
+        const limit = Math.min(MAX_PAGE, totalPlanCount - start);
+        await payflow.deactivatePage(address, signXdr, start, limit);
+        completedPages += 1;
+        setDeactivateAllProgress({ current: completedPages, total: totalPages });
+      }
+      setDeactivateAllDone(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setDeactivateAllProgress(null);
+      setConfirmDeactivateAll(false);
+      await load();
+    }
+  }
+
   if (!address) {
     return (
       <Panel title="Merchant dashboard">
@@ -1351,6 +1413,9 @@ export default function MerchantPage() {
       </div>
 
       {error && <Notice tone="error">{error}</Notice>}
+      {deactivateAllDone && (
+        <Notice tone="ok">All active plans deactivated.</Notice>
+      )}
       {done && (
         <Notice tone="ok">
           Done. Transaction <TxLink hash={done} />
@@ -1569,15 +1634,26 @@ export default function MerchantPage() {
       <Panel
         title="My plans"
         actions={
-          <div className="flex items-center gap-2">
-            <Link
-              href={`/m/?address=${address}`}
-              className="btn-ghost whitespace-nowrap"
-            >
-              Public page
-            </Link>
-            <CopyButton value={publicUrl} label="public page link" />
-          </div>
+          <>
+            <div className="flex items-center gap-2">
+              <Link
+                href={`/m/?address=${address}`}
+                className="btn-ghost whitespace-nowrap"
+              >
+                Public page
+              </Link>
+              <CopyButton value={publicUrl} label="public page link" />
+            </div>
+            {(plans ?? []).some((p) => p.active) && !busy && !networkMismatch && deactivateAllProgress === null && (
+              <button
+                type="button"
+                className="btn-ghost text-danger whitespace-nowrap"
+                onClick={() => setConfirmDeactivateAll(true)}
+              >
+                Deactivate all plans
+              </button>
+            )}
+          </>
         }
       >
         {plans === null ? (
@@ -2231,6 +2307,66 @@ export default function MerchantPage() {
       </Panel>
 
       <WebhooksPanel key={`webhooks:${address}`} merchant={address} apiConfigured={api.isConfigured()} />
+
+      {confirmDeactivateAll && (
+        <Dialog
+          open={confirmDeactivateAll}
+          onClose={() => setConfirmDeactivateAll(false)}
+          title="Deactivate all active plans"
+          actions={
+            <>
+              <button
+                type="button"
+                className="btn-ghost"
+                disabled={busy !== null || deactivateAllProgress !== null}
+                onClick={() => setConfirmDeactivateAll(false)}
+              >
+                Keep active
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                disabled={busy !== null || networkMismatch || deactivateAllProgress !== null}
+                onClick={() => void deactivateAllPlans()}
+              >
+                {deactivateAllProgress
+                  ? `Deactivating… (${deactivateAllProgress.current}/${deactivateAllProgress.total} pages)`
+                  : "Confirm: deactivate all"}
+              </button>
+            </>
+          }
+        >
+          <div className="space-y-2 text-sm">
+            {(() => {
+              const { activePlans, openMandates } = getDeactivationImpact();
+              if (activePlans === 0) {
+                return <p className="text-muted">No active plans to deactivate.</p>;
+              }
+              // Total pages will be determined at runtime from the contract's plan count.
+              // We show the active plan count and open mandates; the progress dialog
+              // will display the actual page count as it runs.
+              return (
+                <>
+                  <p>
+                    This will deactivate <strong>{activePlans}</strong> active plan{activePlans === 1 ? "" : "s"}.
+                  </p>
+                  <p className="text-muted">
+                    Affected open subscriptions: <strong>{openMandates}</strong>{" "}
+                    {openMandates === 1 ? "mandate" : "mandates"}.
+                  </p>
+                  <p className="text-muted">
+                    Existing subscribers will continue to be billed on schedule until their subscriptions are individually ended
+                    or cancelled. New subscribers will no longer be able to subscribe to these plans.
+                  </p>
+                  <p className="text-xs text-muted">
+                    The operation pages through all plans in batches of {MAX_PAGE}; progress will be shown once confirmed.
+                  </p>
+                </>
+              );
+            })()}
+          </div>
+        </Dialog>
+      )}
     </div>
   );
 }
