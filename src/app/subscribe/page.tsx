@@ -13,6 +13,7 @@ import { formatTrialLength, trialBadge, trialSeconds } from "@/lib/trial";
 import { planAvailability } from "@/lib/availability";
 import { metaFor, useTokenMetas } from "@/lib/token";
 import { filterAndSortPlans, type PlanPeriodOption, type PlanSortOption } from "@/lib/plans";
+import { formatUsdEstimate, formatUsdcEstimate, useXlmUsdPrice } from "@/lib/price";
 import { Empty, MerchantAccount, Notice, Panel, SkeletonPlanCards, TxLink } from "@/components/ui";
 
 function SubscribeInner() {
@@ -31,6 +32,7 @@ function SubscribeInner() {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
   const [doneTrial, setDoneTrial] = useState<{ plan: string; seconds: number } | null>(null);
+  const { priceData: xlmPrice } = useXlmUsdPrice();
 
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
   const request = useRef(0);
@@ -292,13 +294,30 @@ function SubscribeInner() {
                 const meta = metaFor(metas, plan.token);
                 const badge = trialBadge(plan);
                 const availability = planAvailability(plan, now);
+                const usdEstimate =
+                  meta.symbol === "XLM" && xlmPrice
+                    ? formatUsdEstimate(plan.amount, xlmPrice.price, xlmPrice.decimals, meta.decimals)
+                    : meta.symbol === "USDC"
+                      ? formatUsdcEstimate(plan.amount, meta.decimals)
+                      : null;
                 return (
                   <Panel key={plan.id} title={plan.name || `Plan #${plan.id}`}>
                     <div className="space-y-3">
                       <div>
-                        <div className="text-2xl font-semibold tabular-nums">
-                          {fromStroops(plan.amount, 4, meta.decimals)}{" "}
-                          <span className="text-sm font-normal text-muted">{meta.symbol}</span>
+                        <div className="flex flex-wrap items-baseline gap-2">
+                          <div className="text-2xl font-semibold tabular-nums">
+                            {fromStroops(plan.amount, 4, meta.decimals)}{" "}
+                            <span className="text-sm font-normal text-muted">{meta.symbol}</span>
+                          </div>
+                          {usdEstimate && (
+                            <span
+                              className="text-sm text-muted tabular-nums"
+                              title="Estimated USD value based on Reflector oracle price"
+                              aria-label={`Approximately ${usdEstimate} US Dollars`}
+                            >
+                              (≈ {usdEstimate})
+                            </span>
+                          )}
                         </div>
                         <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
                           <span>{formatPeriod(plan.period)}</span>

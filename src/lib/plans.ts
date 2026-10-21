@@ -74,3 +74,44 @@ export function filterAndSortPlans(
 
   return result;
 }
+
+/**
+ * Normalizes a mandate status across API objects ("Active") and contract
+ * state tuples (["Active"]).
+ */
+export function normalizeMandateStatus(raw: unknown): string {
+  if (Array.isArray(raw)) return String(raw[0] ?? "");
+  return String(raw ?? "");
+}
+
+/**
+ * Count the open (active or paused) mandates on a plan.
+ *
+ * Checks both the `mandates` list (from API or contract state) and falls back
+ * to `planStatsSubscriberCount` (from contract or backend stats).
+ *
+ * Works in both API mode and contract-only mode.
+ */
+export function countOpenMandates(
+  planId: number,
+  mandates?: ReadonlyArray<{ plan_id: number; status: unknown }> | null,
+  planStatsSubscriberCount?: number | null,
+): number {
+  if (mandates && mandates.length > 0) {
+    const matching = mandates.filter(
+      (m) =>
+        m.plan_id === planId &&
+        (normalizeMandateStatus(m.status) === "Active" ||
+          normalizeMandateStatus(m.status) === "Paused"),
+    ).length;
+    if (typeof planStatsSubscriberCount === "number") {
+      return Math.max(matching, planStatsSubscriberCount);
+    }
+    return matching;
+  }
+  if (typeof planStatsSubscriberCount === "number") {
+    return planStatsSubscriberCount;
+  }
+  return 0;
+}
+

@@ -1,5 +1,11 @@
 import { execSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync } from "node:fs";
+
+// Copy embed files into public/embed so they are included in static export
+if (existsSync("./embed")) {
+  mkdirSync("./public/embed", { recursive: true });
+  cpSync("./embed", "./public/embed", { recursive: true });
+}
 
 /** @type {import('next').NextConfig} */
 
