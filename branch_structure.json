@@ -1,0 +1,33 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "issue-24-i18n",
+    "issue-53-wallet-context",
+    "issue-61-more-wallets",
+    "main",
+    "review/24-screenshots",
+    "validate/24-i18n",
+    "validate/53-wallet-context",
+    "validate/61-more-wallets"
+  ],
+  "parent": {
+    "issue-24-i18n": "main",
+    "issue-53-wallet-context": "main",
+    "issue-61-more-wallets": "main",
+    "main": null,
+    "review/24-screenshots": "main",
+    "validate/24-i18n": "main",
+    "validate/53-wallet-context": "main",
+    "validate/61-more-wallets": "main"
+  },
+  "order": [
+    "main",
+    "issue-24-i18n",
+    "issue-53-wallet-context",
+    "issue-61-more-wallets",
+    "review/24-screenshots",
+    "validate/24-i18n",
+    "validate/53-wallet-context",
+    "validate/61-more-wallets"
+  ]
+}
