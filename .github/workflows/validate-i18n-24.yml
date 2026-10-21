@@ -1,0 +1,82 @@
+{
+  "name": "Validate English and French static export",
+  "on": {
+    "push": {
+      "branches": [
+        "validate/24-i18n"
+      ]
+    }
+  },
+  "permissions": {
+    "contents": "read"
+  },
+  "jobs": {
+    "checks": {
+      "runs-on": "ubuntu-latest",
+      "timeout-minutes": 20,
+      "steps": [
+        {
+          "uses": "actions/checkout@v4"
+        },
+        {
+          "uses": "actions/setup-node@v4",
+          "with": {
+            "node-version": "22"
+          }
+        },
+        {
+          "run": "npm ci --ignore-scripts"
+        },
+        {
+          "name": "Locale regressions",
+          "run": "npm test -- test/i18n.test.ts test/i18n-provider.test.tsx"
+        },
+        {
+          "name": "Lint",
+          "if": "always()",
+          "run": "npm run lint"
+        },
+        {
+          "name": "Typecheck",
+          "if": "always()",
+          "run": "npm run typecheck"
+        },
+        {
+          "name": "Full unit suite",
+          "if": "always()",
+          "run": "npm test"
+        },
+        {
+          "name": "Static production build (contract-only mode)",
+          "if": "always()",
+          "run": "npm run build",
+          "env": {
+            "NEXT_PUBLIC_API_URL": "",
+            "NEXT_PUBLIC_SOROBAN_RPC_URL": "https://soroban-testnet.stellar.org",
+            "NEXT_PUBLIC_NETWORK_PASSPHRASE": "Test SDF Network ; September 2015",
+            "NEXT_PUBLIC_PLAN_REGISTRY_ID": "CDQ5EJTVXXX2CBMHWP3BGGUDHSK6D4I25IF5XXH3QGL2TNTBMJUOFKDB",
+            "NEXT_PUBLIC_VAULT_ID": "CBNQEWSYYQOKNX5KB62OFT6ID5TCVSWN4PS4AXAJK6IWUEXOLVN6DXII",
+            "NEXT_PUBLIC_SUBSCRIPTION_ID": "CD5YZUJU6WLFIHGAV4J2BV42GCVZE5ZGDUGSW5CBRIA47TQHSZZW3XMM",
+            "NEXT_PUBLIC_TOKEN_ID": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+            "NEXT_PUBLIC_BASE_PATH": "/payflow-frontend"
+          }
+        },
+        {
+          "name": "Static production build with backend configured",
+          "if": "always()",
+          "run": "npm run build",
+          "env": {
+            "NEXT_PUBLIC_API_URL": "http://localhost:8080",
+            "NEXT_PUBLIC_SOROBAN_RPC_URL": "https://soroban-testnet.stellar.org",
+            "NEXT_PUBLIC_NETWORK_PASSPHRASE": "Test SDF Network ; September 2015",
+            "NEXT_PUBLIC_PLAN_REGISTRY_ID": "CDQ5EJTVXXX2CBMHWP3BGGUDHSK6D4I25IF5XXH3QGL2TNTBMJUOFKDB",
+            "NEXT_PUBLIC_VAULT_ID": "CBNQEWSYYQOKNX5KB62OFT6ID5TCVSWN4PS4AXAJK6IWUEXOLVN6DXII",
+            "NEXT_PUBLIC_SUBSCRIPTION_ID": "CD5YZUJU6WLFIHGAV4J2BV42GCVZE5ZGDUGSW5CBRIA47TQHSZZW3XMM",
+            "NEXT_PUBLIC_TOKEN_ID": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+            "NEXT_PUBLIC_BASE_PATH": "/payflow-frontend"
+          }
+        }
+      ]
+    }
+  }
+}
