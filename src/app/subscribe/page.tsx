@@ -52,7 +52,7 @@ function ComparisonTable({
   metas: Map<string, TokenMeta>;
   now: number;
 }) {
-  const { t: tr, formatPeriod, formatAmount, formatTokenValue, formatTrialLength } = useI18n();
+  const { t: tr, formatPeriod, formatAmount, formatTokenValue, formatTrialLength, formatNumber } = useI18n();
   return (
     <div
       className="mt-3 overflow-x-auto rounded-lg border border-edge"
@@ -61,7 +61,7 @@ function ComparisonTable({
       aria-label={tr("Plan comparison, scroll horizontally if needed")}
     >
       <table className="w-full min-w-[34rem] border-collapse text-sm">
-        <caption className="sr-only">{tr("Side-by-side comparison of")}{" "}{plans.length}{" "}{tr("selected plans")}</caption>
+        <caption className="sr-only">{tr("Side-by-side comparison of")}{" "}{formatNumber(plans.length)}{" "}{tr("selected plans")}</caption>
         <thead>
           <tr className="border-b border-edge bg-fg/5">
             <th scope="col" className="px-3 py-2 text-left font-medium text-muted">{tr("Feature")}</th>
@@ -144,7 +144,7 @@ function ComparisonTable({
 }
 
 function SubscribeInner() {
-  const { t: tr, formatPeriod, formatDate, formatWhen, translateMessage, formatTrialLength, trialBadge, formatTokenValue, formatUsdString } = useI18n();
+  const { t: tr, formatPeriod, formatDate, formatWhen, translateMessage, formatTrialLength, trialBadge, formatTokenValue, formatUsdString, formatNumber } = useI18n();
   const searchParams = useSearchParams();
   const sortParam = (searchParams?.get("sort") as PlanSortOption) || "newest";
   const periodParam = (searchParams?.get("period") as PlanPeriodOption) || "all";
@@ -400,7 +400,7 @@ function SubscribeInner() {
               </div>
             </div>
 
-            <span className="text-xs text-muted" aria-live="polite">{tr("Showing")}{" "}{filteredPlans.length}{" "}{tr("of")}{" "}{active.length}{" "}{tr("plans")}</span>
+            <span className="text-xs text-muted" aria-live="polite">{tr("Showing")}{" "}{formatNumber(filteredPlans.length)}{" "}{tr("of")}{" "}{formatNumber(active.length)}{" "}{tr("plans")}</span>
           </div>
 
           {compareIds.length > 0 && (
@@ -410,7 +410,7 @@ function SubscribeInner() {
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm text-muted" role="status">
-                  {compareIds.length}{" "}{tr("of")}{" "}{COMPARE_LIMIT}{" "}{tr("plans selected for comparison")}{compareIds.length === COMPARE_LIMIT ?tr(" (maximum)") : ""}.
+                  {formatNumber(compareIds.length)}{" "}{tr("of")}{" "}{COMPARE_LIMIT}{" "}{tr("plans selected for comparison")}{compareIds.length === COMPARE_LIMIT ?tr(" (maximum)") : ""}.
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <button
@@ -516,14 +516,14 @@ function SubscribeInner() {
                       )}
                       {availability.seats !== null && (
                         <p className="text-sm text-accent">
-                          {availability.seats} {availability.seats === 1 ?tr("seat") :tr("seats")}{" "}{tr("left")}</p>
+                          {formatNumber(availability.seats)} {availability.seats === 1 ?tr("seat") :tr("seats")}{" "}{tr("left")}</p>
                       )}
                       {availability.countUnavailable && (
                         <p className="text-sm text-muted">{tr("Remaining seats are unavailable from this source. Availability is checked by the contract when subscribing.")}</p>
                       )}
                       {availability.reason && (
                         <p id={`availability-${plan.id}`} className="text-sm text-muted">
-                          {availability.reason}
+                          {translateMessage(availability.reason ?? "")}
                         </p>
                       )}
 

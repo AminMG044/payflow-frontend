@@ -25,7 +25,7 @@ import {
 } from "@/components/ui";
 
 function MandateDetailsInner() {
-  const { t: tr, formatPeriod, formatDate, formatAmount, translateMessage, formatTokenValue } = useI18n();
+  const { t: tr, formatPeriod, formatDate, formatAmount, translateMessage, formatTokenValue, formatNumber } = useI18n();
   const searchParams = useSearchParams();
   const idParam = searchParams?.get("id");
   const mandateId =
@@ -450,7 +450,7 @@ function MandateDetailsInner() {
         subtitle={tr("Individual charges settled under this mandate")}
       >
         {chargesUnavailable ? (
-          <Notice tone="info">{tr("Charge history requires the indexer. When running in contract-only mode, individual transaction records are not available; the on-chain counters (charges made:")}{" "}{mandate.charges_made}{tr(") are shown above.")}</Notice>
+          <Notice tone="info">{tr("Charge history requires the indexer. When running in contract-only mode, individual transaction records are not available; the on-chain counters (charges made:")}{" "}{formatNumber(mandate.charges_made)}{tr(") are shown above.")}</Notice>
         ) : charges === null ? (
           <SkeletonRows rows={2} label={tr("Loading charge history")} />
         ) : charges.length === 0 ? (
@@ -474,7 +474,7 @@ function MandateDetailsInner() {
                       #{c.ledger}
                     </td>
                     <td className="py-3 px-4 tabular-nums">
-                      #{c.charges_made}
+                      #{formatNumber(c.charges_made)}
                     </td>
                     <td className="py-3 px-4 font-medium tabular-nums">
                       {formatTokenValue(c.amount, 4, tokenMeta.decimals)} {tokenMeta.symbol}

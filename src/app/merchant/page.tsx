@@ -91,7 +91,7 @@ function ChargeAttemptsHistory({
   mandateId: number;
   apiConfigured: boolean;
 }) {
-  const { t: tr, formatDate } = useI18n();
+  const { t: tr, formatDate, translateMessage } = useI18n();
   const [expanded, setExpanded] = useState(false);
   const [attempts, setAttempts] = useState<ApiChargeAttempt[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -126,7 +126,7 @@ function ChargeAttemptsHistory({
     }
     if (attempt.error_code !== null) {
       // Construct an error that matches what decodeContractError expects
-      const err = new Error(tr("HostError: Error(Contract, #{0})", { "0": attempt.error_code }));
+      const err = new Error(`HostError: Error(Contract, #${attempt.error_code})`);
       return decodeContractError(err, "charge");
     }
     return "Charge failed for an unknown reason.";
@@ -173,7 +173,7 @@ function ChargeAttemptsHistory({
                     )}
                   </div>
                   {attempt.result === "failed" && (
-                    <p className="mt-1 text-xs text-danger">{decodeAttemptError(attempt)}</p>
+                    <p className="mt-1 text-xs text-danger">{translateMessage(decodeAttemptError(attempt))}</p>
                   )}
                 </div>
               ))}
@@ -198,7 +198,7 @@ function MerchantChurnPanel({
   merchant: string;
   apiConfigured: boolean;
 }) {
-  const { t: tr } = useI18n();
+  const { t: tr, formatNumber } = useI18n();
   const [state, setState] = useState<ChurnPanelState>({ status: "loading" });
 
   useEffect(() => {
@@ -271,10 +271,10 @@ function MerchantChurnPanel({
               {state.months.map((month) => (
                 <tr key={month.bucket} className="border-b border-edge last:border-0">
                   <th scope="row" className="py-2 pr-3 font-medium">{month.bucket}</th>
-                  <td className="py-2 pr-3 text-right tabular-nums">{month.started}</td>
-                  <td className="py-2 pr-3 text-right tabular-nums">{month.cancelled}</td>
-                  <td className="py-2 pr-3 text-right tabular-nums">{month.ended}</td>
-                  <td className="py-2 pr-3 text-right tabular-nums">{month.completed}</td>
+                  <td className="py-2 pr-3 text-right tabular-nums">{formatNumber(month.started)}</td>
+                  <td className="py-2 pr-3 text-right tabular-nums">{formatNumber(month.cancelled)}</td>
+                  <td className="py-2 pr-3 text-right tabular-nums">{formatNumber(month.ended)}</td>
+                  <td className="py-2 pr-3 text-right tabular-nums">{formatNumber(month.completed)}</td>
                   <td className="py-2 text-right tabular-nums">
                     {month.net > 0
                       ?tr("+{0} (increase)", { "0": month.net })
@@ -774,7 +774,7 @@ function RefundForm({
 }
 
 export default function MerchantPage() {
-  const { checkAmount, t: tr, formatPeriod, translateMessage, unitLabel, trialBadge, formatTokenValue, discountBadge, formatUsdString } = useI18n();
+  const { checkAmount, t: tr, formatPeriod, translateMessage, unitLabel, trialBadge, formatTokenValue, discountBadge, formatUsdString, formatNumber } = useI18n();
   const { address, networkMismatch, signXdr, connect, connecting } = useWallet();
   const [plans, setPlans] = useState<ApiPlan[] | null>(null);
   const [mandates, setMandates] = useState<ApiMandate[] | null>(null);
@@ -1567,7 +1567,7 @@ export default function MerchantPage() {
               </div>
               {periodError && (
                 <p id="period-error" className="mt-2 text-sm text-rose-200">
-                  {periodError}
+                  {translateMessage(periodError)}
                 </p>
               )}
             </div>
@@ -1628,7 +1628,7 @@ export default function MerchantPage() {
           className={showPriceError ? "mt-3 text-sm text-danger" : "mt-3 text-sm text-muted"}
         >
           {showPriceError
-            ? priceError
+            ? translateMessage(priceError ?? "")
             : (split ? (
                 <FeePreview
                   split={split}
@@ -1751,7 +1751,7 @@ export default function MerchantPage() {
                         <div className="flex gap-1">
                           <dt>{tr("Subscribers")}</dt>
                           <dd className="font-medium text-foreground tabular-nums">
-                            {stats.subscriber_count}
+                            {formatNumber(stats.subscriber_count)}
                           </dd>
                         </div>
                         {hasRevenue && (
@@ -1900,7 +1900,7 @@ export default function MerchantPage() {
                 onClick={() => setSubscribersTab("unpaid")}
               >{tr("Unpaid")}{unpaidMandates && unpaidMandates.length > 0 && (
                   <span className="ml-1.5 rounded-full bg-danger px-1.5 py-0.5 text-xs font-semibold text-white">
-                    {unpaidMandates.length}
+                    {formatNumber(unpaidMandates.length)}
                   </span>
                 )}
               </button>
@@ -1999,7 +1999,7 @@ export default function MerchantPage() {
                       </div>
                       <div className="mt-1 text-xs text-muted">
                         {formatTokenValue(m.amount, 4, meta.decimals)} {meta.symbol}{" "}
-                        {formatPeriod(m.period)} · {m.charges_made}{" "}{tr("settled · next")}{" "}
+                        {formatPeriod(m.period)} · {formatNumber(m.charges_made)}{" "}{tr("settled · next")}{" "}
                         {m.status === "Active" ? <TimeAgo value={m.next_charge} /> : "—"}
                       </div>
                       {badge && (
@@ -2254,7 +2254,7 @@ export default function MerchantPage() {
                         </div>
                         <div className="mt-1 text-sm text-muted">
                           {formatTokenValue(m.amount, 4, meta.decimals)} {meta.symbol}{" "}
-                          {formatPeriod(m.period)} · {m.charges_made}{" "}{tr("settled")}</div>
+                          {formatPeriod(m.period)} · {formatNumber(m.charges_made)}{" "}{tr("settled")}</div>
                         <div className="mt-2 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2">
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                             <div className="text-sm">
@@ -2317,7 +2317,7 @@ export default function MerchantPage() {
               // will display the actual page count as it runs.
               return (
                 <>
-                  <p>{tr("This will deactivate")}{" "}<strong>{activePlans}</strong>{" "}{tr("active plan")}{activePlans === 1 ? "" :tr("s")}.
+                  <p>{tr("This will deactivate")}{" "}<strong>{formatNumber(activePlans)}</strong>{" "}{tr("active plan")}{activePlans === 1 ? "" :tr("s")}.
                   </p>
                   <p className="text-muted">{tr("Affected open subscriptions:")}{" "}<strong>{openMandates}</strong>{" "}
                     {openMandates === 1 ?tr("mandate") :tr("mandates")}.

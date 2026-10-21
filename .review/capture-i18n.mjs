@@ -13,7 +13,7 @@ try {
   await mkdir('.review/screenshots',{recursive:true});
   for(const [device,width] of [['desktop',1280],['mobile',375]])for(const locale of ['en','fr']) {
     const context=await browser.newContext({viewport:{width,height:900},reducedMotion:'reduce',serviceWorkers:'block'});
-    await context.addInitScript(value=>{localStorage.setItem('payflow.locale',value);},locale);
+    await context.addInitScript(value=>{if(!localStorage.getItem('payflow.locale'))localStorage.setItem('payflow.locale',value);},locale);
     await context.route('**/*',async route=>{
       const url=new URL(route.request().url());
       if(url.origin===origin&&!url.pathname.startsWith('/api/'))return route.continue();

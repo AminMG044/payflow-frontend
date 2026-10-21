@@ -88,7 +88,7 @@ import {
 } from "@/components/ui";
 
 function AccountInner() {
-  const { checkAmount, t: tr, formatDate, parseAmount, formatAmount, formatPeriod, translateMessage, describeTrialEnd, discountBadge, formatTokenValue } = useI18n();
+  const { checkAmount, t: tr, formatDate, parseAmount, formatAmount, formatPeriod, translateMessage, describeTrialEnd, discountBadge, formatTokenValue, formatNumber } = useI18n();
   const searchParams = useSearchParams();
   const paramAddress = searchParams?.get("address");
   const targetAddress =
@@ -844,8 +844,8 @@ function AccountInner() {
           value={
             runway
               ? runway.hasActiveMandates
-                ? `${runway.chargesCovered} ${runway.chargesCovered === 1 ? "charge" : "charges"}`
-                : "No active charges"
+                ? tr(runway.chargesCovered === 1 ? "{0} charge" : "{0} charges", { 0: runway.chargesCovered })
+                : tr("No active charges")
               : "…"
           }
           hint={
@@ -862,7 +862,7 @@ function AccountInner() {
         <Notice tone="error">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <span>
-              <strong>{tr("Low vault balance:")}</strong>{" "}{tr("Covers only")}{" "}{runway.chargesCovered}{" "}
+              <strong>{tr("Low vault balance:")}</strong>{" "}{tr("Covers only")}{" "}{formatNumber(runway.chargesCovered)}{" "}
               {runway.chargesCovered === 1 ?tr("upcoming charge") :tr("upcoming charges")}.{" "}
               {runway.runsOutDate
                 ?tr("Funds will run out on {0}.", { "0": formatDate(runway.runsOutDate) })
@@ -877,7 +877,7 @@ function AccountInner() {
         <Notice tone="info">
           {/* Announced when the export finishes, so a screen-reader user knows
               the file was produced without having to hunt for the button. */}
-          <span role="status">{info}</span>
+          <span role="status">{translateMessage(info)}</span>
         </Notice>
       )}
       {done && (
@@ -990,7 +990,7 @@ function AccountInner() {
                 />
                 {recipientDisplayError && (
                   <p id="fund-recipient-error" className="mt-1 text-sm text-danger">
-                    {recipientDisplayError}
+                    {translateMessage(recipientDisplayError)}
                   </p>
                 )}
               </div>
@@ -1044,13 +1044,13 @@ function AccountInner() {
           <div className="space-y-2">
             {history.map((event) => {
               const label = vaultEventLabel(event);
-              const eventAmount = vaultEventAmount(event);
               const isCredit = vaultEventTone(event) === "ok";
+              const eventAmount = `${isCredit ? "+" : "-"}${formatTokenValue(event.amount, 4, vaultMeta.decimals)}`;
               return (
                 <div
                   key={event.tx_hash}
                   className="flex items-center justify-between gap-3 rounded-lg border border-edge p-3"
-                  aria-label={tr("{0} {1} {2}, ledger {3}", { "0": label, "1": eventAmount, "2": vaultMeta.symbol, "3": String(event.ledger) })}
+                  aria-label={tr("{0} {1} {2}, ledger {3}", { "0": tr(label), "1": eventAmount, "2": vaultMeta.symbol, "3": String(event.ledger) })}
                 >
                   <div className="flex items-center gap-3 text-sm">
                     <span className="font-medium">{typeof label === "string" ? tr(label) : label}</span>
@@ -1249,7 +1249,7 @@ function AccountInner() {
                           </div>
                         )}
                         <div className="mt-1 text-xs text-muted">
-                          {m.charges_made}{" "}{tr("charge")}{m.charges_made === 1 ? "" :tr("s")}{" "}{tr("taken")}{m.max_charges > 0 &&tr(" of {0}", { "0": m.max_charges })}
+                          {formatNumber(m.charges_made)}{" "}{tr("charge")}{m.charges_made === 1 ? "" :tr("s")}{" "}{tr("taken")}{m.max_charges > 0 &&tr(" of {0}", { "0": m.max_charges })}
                           {tr(" · next ")}
                           {m.status === "Active" ? <TimeAgo value={m.next_charge} /> : "—"}
                         </div>
@@ -1441,7 +1441,7 @@ function AccountInner() {
                       >
                         <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                           <h3 id={`schedule-${m.id}`} className="text-sm font-medium">{tr("Upcoming charges")}</h3>
-                          <span className="text-xs text-muted">{tr("Next")}{" "}{schedule.charges.length}{" "}{tr("total")}{" "}
+                          <span className="text-xs text-muted">{tr("Next")}{" "}{formatNumber(schedule.charges.length)}{" "}{tr("total")}{" "}
                             {formatAmount(schedule.total, meta)}
                           </span>
                         </div>

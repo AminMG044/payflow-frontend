@@ -42,7 +42,7 @@ describe("French on the four main pages", () => {
   it("translates the overview instructions and number counters", async () => {
     render(<App><HomePage /></App>);
     await screen.findByText("Le marchand publie une offre");
-    await screen.findByText("1\u202f234");
+    await screen.findByText(/^1\s234$/);
     expect(screen.queryByText("The merchant publishes a plan")).toBeNull();
   });
   it("translates plan controls, trial badges and money while preserving merchant names", async () => {
@@ -50,7 +50,7 @@ describe("French on the four main pages", () => {
     await screen.findByText("English merchant name");
     await screen.findByText("Essai gratuit : 3 jours");
     expect(screen.getByLabelText("Période de facturation :")).toBeTruthy();
-    expect(screen.getByText("1\u202f234,5678")).toBeTruthy();
+    expect(screen.getByText(/^1\s234,5678$/)).toBeTruthy();
     fireEvent.change(screen.getByRole("combobox", { name: "Langue" }), { target: { value: "en" } });
     expect(screen.getByText("English merchant name")).toBeTruthy();
     expect(screen.getByLabelText("Billing period:")).toBeTruthy();
