@@ -108,7 +108,7 @@ export function VirtualList<T>({
       <div
         className={className}
         role="region"
-        aria-label={listAriaLabel}
+        aria-label={tr(listAriaLabel)}
       >
         {items.map((item, index) => (
           <div
@@ -146,7 +146,7 @@ export function VirtualList<T>({
       className={`relative overflow-y-auto outline-none focus:ring-1 focus:ring-accent/40 rounded-lg ${className}`}
       style={{ maxHeight: containerMaxHeight }}
       role="feed"
-      aria-label={listAriaLabel}
+      aria-label={tr(listAriaLabel)}
       tabIndex={0}
       onScroll={handleScroll}
       onFocusCapture={handleFocusCapture}
